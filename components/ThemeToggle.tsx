@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { THEME_STORAGE_KEY as STORAGE_KEY } from "@/lib/theme";
+import { button } from "@/lib/ui";
 
 type Theme = "light" | "dark";
 
@@ -43,7 +44,7 @@ export function ThemeToggle() {
 
   const label = theme === "dark" ? "Switch to light mode" : "Switch to dark mode";
   return (
-    <button type="button" className="button button-ghost button-icon" onClick={toggle} aria-label={label} title={label}>
+    <button type="button" className={button({ variant: "ghost", size: "icon" })} onClick={toggle} aria-label={label} title={label}>
       {theme === "dark" ? <Sun size={18} weight="bold" aria-hidden /> : <Moon size={18} weight="bold" aria-hidden />}
     </button>
   );

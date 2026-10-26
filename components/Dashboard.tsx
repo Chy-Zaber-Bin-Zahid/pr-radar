@@ -5,9 +5,10 @@ import { ArrowClockwise, CheckCircle, FolderSimple, Funnel, SignOut, Warning, XC
 import type { Activity, DashboardData, PullRequest, Role } from "@/lib/types";
 import { TASK_ORDER, signalsFor, tasksFor, unseenActivity, type Signal, type SignalKey, type Task, type Tone } from "@/lib/signals";
 import { timeAgo } from "@/lib/time";
+import { button, cn, tone } from "@/lib/ui";
 import { useStoredState } from "@/lib/useStoredState";
+import { Banner, Brand, CountPill } from "./Common";
 import { SearchField, Select } from "./Fields";
-import { Logo } from "./Logo";
 import { PrRow } from "./PrRow";
 import { SignalIcon } from "./SignalIcon";
 import { TaskCard } from "./TaskCard";
@@ -40,6 +41,10 @@ const STATUS_FILTERS: { key: SignalKey; label: string; tone: Tone }[] = [
   { key: "checks_failing", label: "Checks failing", tone: "red" },
   { key: "ready", label: "Ready to merge", tone: "green" },
 ];
+
+const CHECKBOX_LABEL = "inline-flex min-h-[34px] cursor-pointer items-center gap-2 whitespace-nowrap text-sm text-muted hover:text-fg pointer-coarse:min-h-11";
+const CHECKBOX = "size-4 cursor-pointer accent-accent pointer-coarse:size-5";
+const TEXT_BUTTON = "text-sm font-medium text-accent hover:underline pointer-coarse:min-h-11";
 
 // The selected project lives in the URL (#/owner/repo) so it survives reloads and works with Back.
 const readRepoHash = (hash: string): string | null | undefined => {
@@ -223,37 +228,34 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
 
   const signOut = (
     <form action="/api/auth/logout" method="post">
-      <button type="submit" className="button button-ghost button-icon" aria-label="Sign out" title="Sign out">
+      <button type="submit" className={button({ variant: "ghost", size: "icon" })} aria-label="Sign out" title="Sign out">
         <SignOut size={18} weight="bold" aria-hidden />
       </button>
     </form>
   );
 
   return (
-    <div className="app">
-      <a href="#main" className="skip-link">
+    <div className="grid min-h-dvh grid-cols-[264px_minmax(0,1fr)] max-lg:grid-cols-[232px_minmax(0,1fr)] max-md:grid-cols-[minmax(0,1fr)]">
+      <a href="#main" className="absolute -top-24 left-4 z-[100] rounded-lg bg-fg px-3 py-2 font-semibold text-bg focus:top-3">
         Skip to pull requests
       </a>
 
-      <aside className="sidebar">
-        <a href="#/" className="brand sidebar-brand">
-          <Logo />
-          <span>PR Radar</span>
-        </a>
+      <aside className="sticky top-0 flex h-dvh flex-col gap-5 overflow-y-auto border-r border-line bg-surface px-3 pt-5 pb-3 max-md:hidden">
+        <Brand href="#/" className="px-2" />
 
-        <nav className="nav" aria-label="Projects">
+        <nav className="flex flex-1 flex-col gap-4" aria-label="Projects">
           {!ready ? (
-            <div className="nav-skeleton" aria-hidden>
+            <div className="flex flex-col gap-2 px-2" aria-hidden>
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <span key={i} />
+                <span key={i} className="h-[22px] animate-pulse rounded-md bg-surface-2" />
               ))}
             </div>
           ) : (
             <>
               <NavItem href="#/" label="All projects" total={scoped.length} needs={scoped.filter((r) => r.tasks.length).length} current={!repo} />
               {projects.map((org) => (
-                <div key={org.owner} className="nav-group">
-                  <p className="nav-group-label">{org.owner}</p>
+                <div key={org.owner} className="flex flex-col gap-0.5">
+                  <p className="mb-1 px-2 text-xs font-semibold uppercase tracking-[0.04em] text-muted">{org.owner}</p>
                   {org.repos.map((p) => (
                     <NavItem key={p.repo} href={`#/${p.repo}`} label={p.name} title={p.repo} total={p.total} needs={p.needs} current={repo === p.repo} />
                   ))}
@@ -263,35 +265,36 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
           )}
         </nav>
 
-        <div className="sidebar-footer">
-          <img src={viewer.avatarUrl} alt="" width={28} height={28} />
-          <span className="sidebar-user">{viewer.login}</span>
+        <div className="flex items-center gap-2 border-t border-line px-2 pt-3">
+          <img className="rounded-full" src={viewer.avatarUrl} alt="" width={28} height={28} />
+          <span className="min-w-0 flex-1 truncate text-sm font-medium">{viewer.login}</span>
           <ThemeToggle />
           {signOut}
         </div>
       </aside>
 
-      <header className="mobile-bar">
-        <a href="#/" className="brand">
-          <Logo />
-          <span>PR Radar</span>
-        </a>
-        <div className="mobile-bar-right">
-          <img src={viewer.avatarUrl} alt={viewer.login} width={28} height={28} />
+      <header className="sticky top-0 z-10 hidden min-h-14 items-center justify-between gap-3 border-b border-line bg-bg/88 px-4 py-2 backdrop-blur-[10px] max-md:flex">
+        <Brand href="#/" />
+        <div className="flex items-center gap-2">
+          <img className="rounded-full" src={viewer.avatarUrl} alt={viewer.login} width={28} height={28} />
           <ThemeToggle />
           {signOut}
         </div>
       </header>
 
-      <main id="main" className="main" tabIndex={-1}>
+      <main
+        id="main"
+        className="mx-auto flex w-full max-w-[1360px] min-w-0 flex-col gap-5 px-8 pt-6 pb-12 focus:outline-hidden max-lg:px-5 max-md:gap-4 max-md:px-4 max-md:pt-4"
+        tabIndex={-1}
+      >
         <p className="sr-only" role="status">
           {announcement}
         </p>
 
         {ready && (
-          <label className="mobile-project">
+          <label className="hidden max-md:block">
             <span className="sr-only">Project</span>
-            <Select icon={FolderSimple} wrapClassName="select-block" value={repo ?? ""} onChange={(e) => (location.hash = `/${e.target.value}`)}>
+            <Select icon={FolderSimple} block className="font-semibold" value={repo ?? ""} onChange={(e) => (location.hash = `/${e.target.value}`)}>
               <option value="">All projects ({scoped.length})</option>
               {projects.map((org) => (
                 <optgroup key={org.owner} label={org.owner}>
@@ -307,66 +310,65 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
           </label>
         )}
 
-        <header className="main-header">
-          <div className="main-title">
-            <h1>{repo ?? "All projects"}</h1>
+        <header className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold leading-tight tracking-[-0.015em] wrap-anywhere">{repo ?? "All projects"}</h1>
             {ready && !unknownRepo && (
-              <p className="subtitle">
-                {inProject.length} open · <strong>{needsHere} need you</strong>
+              <p className="mt-0.5 text-muted">
+                {inProject.length} open · <strong className="font-semibold text-fg">{needsHere} need you</strong>
               </p>
             )}
           </div>
-          <div className="header-actions">
-            <span className="updated">{loading ? "Refreshing…" : data ? `Updated ${timeAgo(data.fetchedAt, now)}` : ""}</span>
-            <button type="button" className="button" onClick={load} disabled={loading} aria-label="Refresh">
-              <ArrowClockwise size={16} weight="bold" className={loading ? "spin" : undefined} aria-hidden />
-              <span className="hide-sm">Refresh</span>
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="text-xs text-muted tabular-nums max-md:hidden">
+              {loading ? "Refreshing…" : data ? `Updated ${timeAgo(data.fetchedAt, now)}` : ""}
+            </span>
+            <button type="button" className={button()} onClick={load} disabled={loading} aria-label="Refresh">
+              <ArrowClockwise size={16} weight="bold" className={loading ? "animate-spin" : undefined} aria-hidden />
+              <span className="max-md:hidden">Refresh</span>
             </button>
           </div>
         </header>
 
         {signedOut && (
-          <div className="banner tone-red" role="alert">
-            <XCircle size={18} weight="fill" aria-hidden />
-            <span>Your GitHub session has expired or was revoked.</span>
-            <a className="button button-sm" href="/api/auth/login">
+          <Banner tone="red" role="alert" icon={<XCircle size={18} weight="fill" aria-hidden />}>
+            <span className="min-w-0 flex-1">Your GitHub session has expired or was revoked.</span>
+            <a className={button({ size: "sm" })} href="/api/auth/login">
               Sign in again
             </a>
-          </div>
+          </Banner>
         )}
         {error && (
-          <div className="banner tone-red" role="alert">
-            <XCircle size={18} weight="fill" aria-hidden />
-            <span>Couldn&apos;t load pull requests: {error}</span>
-            <button type="button" className="button button-sm" onClick={load} disabled={loading}>
+          <Banner tone="red" role="alert" icon={<XCircle size={18} weight="fill" aria-hidden />}>
+            <span className="min-w-0 flex-1">Couldn&apos;t load pull requests: {error}</span>
+            <button type="button" className={button({ size: "sm" })} onClick={load} disabled={loading}>
               Try again
             </button>
-          </div>
+          </Banner>
         )}
         {data?.rateLimit && data.rateLimit.remaining < LOW_RATE_LIMIT && (
-          <div className="banner tone-yellow">
-            <Warning size={18} weight="fill" aria-hidden />
-            <span>
+          <Banner tone="yellow" icon={<Warning size={18} weight="fill" aria-hidden />}>
+            <span className="min-w-0 flex-1">
               You&apos;ve nearly used up GitHub&apos;s free hourly limit ({data.rateLimit.remaining.toLocaleString()} left),
               often because other tools share it. Updates may pause until it resets at{" "}
               {new Date(data.rateLimit.resetAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}.
             </span>
-          </div>
+          </Banner>
         )}
         {data?.warnings.length ? (
-          <details className="banner tone-yellow">
-            <summary>
-              <Warning size={18} weight="fill" aria-hidden />
+          <details className={cn("rounded-xl border border-tone/30 bg-tone-bg px-4 py-3 text-fg", tone("yellow"))}>
+            <summary className="flex cursor-pointer items-center gap-3">
+              <Warning className="shrink-0 text-tone" size={18} weight="fill" aria-hidden />
               <span>
                 Some repositories couldn&apos;t be read. If an organization restricts OAuth apps or uses SSO, grant this
                 app access in{" "}
-                <a href="https://github.com/settings/applications" target="_blank" rel="noreferrer">
+                <a className="text-accent hover:underline" href="https://github.com/settings/applications" target="_blank" rel="noreferrer">
                   GitHub settings
                 </a>
                 .
               </span>
             </summary>
-            <ul>
+            <ul className="mt-2 list-disc pl-[46px] text-xs text-muted">
               {data.warnings.map((w) => (
                 <li key={w}>{w}</li>
               ))}
@@ -377,19 +379,18 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
         {!ready && !error && !signedOut && <Skeleton />}
 
         {ready && unknownRepo && (
-          <div className="empty-state">
-            <strong>No open pull requests in {repo}.</strong>
+          <EmptyState title={`No open pull requests in ${repo}.`}>
             <span>They may have been merged or closed.</span>
-            <a className="button" href="#/">
+            <a className={button()} href="#/">
               Show all projects
             </a>
-          </div>
+          </EmptyState>
         )}
 
         {ready && !unknownRepo && (
           <>
-            <div className="controls">
-              <div className="status-chips" role="group" aria-label="Filter by status">
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by status">
                 {STATUS_FILTERS.map((s) => {
                   const count = inProject.filter((r) => r.keys.has(s.key)).length;
                   const active = focus === s.key;
@@ -397,28 +398,26 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
                     <button
                       key={s.key}
                       type="button"
-                      className={`status-chip tone-${s.tone}`}
+                      className={cn(
+                        "inline-flex min-h-8 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition disabled:pointer-events-none disabled:opacity-50 pointer-coarse:min-h-11",
+                        tone(s.tone),
+                        active ? "border-tone bg-tone-bg text-tone shadow-[inset_0_0_0_1px_var(--tone)]" : "border-line bg-surface text-fg hover:border-line-strong",
+                      )}
                       aria-pressed={active}
                       disabled={!count && !active}
                       onClick={() => setFocus(active ? "all" : s.key)}
                     >
-                      <SignalIcon signal={s.key} size={14} />
+                      <SignalIcon className="text-tone" signal={s.key} size={14} />
                       {s.label}
-                      <span className="chip-count">{count}</span>
+                      <span className={cn("font-mono text-xs", !active && "text-muted")}>{count}</span>
                     </button>
                   );
                 })}
               </div>
 
-              <div className="view-options">
-                <SearchField
-                  id="pr-search"
-                  label="Search pull requests"
-                  placeholder="Search title, branch, author…"
-                  value={query}
-                  onChange={setQuery}
-                />
-                <label className="field-inline">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+                <SearchField id="pr-search" label="Search pull requests" placeholder="Search title, branch, author…" value={query} onChange={setQuery} />
+                <label className="inline-flex min-h-[34px] items-center gap-2 whitespace-nowrap text-sm text-muted">
                   Show
                   <Select icon={Funnel} value={role} onChange={(e) => setRole(e.target.value as RoleFilter)}>
                     {ROLE_FILTERS.map((t) => (
@@ -428,28 +427,20 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
                     ))}
                   </Select>
                 </label>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={prefs.hideDrafts}
-                    onChange={(e) => setPrefs({ ...prefs, hideDrafts: e.target.checked })}
-                  />
+                <label className={CHECKBOX_LABEL}>
+                  <input className={CHECKBOX} type="checkbox" checked={prefs.hideDrafts} onChange={(e) => setPrefs({ ...prefs, hideDrafts: e.target.checked })} />
                   Hide drafts
                 </label>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={prefs.includeBots}
-                    onChange={(e) => setPrefs({ ...prefs, includeBots: e.target.checked })}
-                  />
+                <label className={CHECKBOX_LABEL}>
+                  <input className={CHECKBOX} type="checkbox" checked={prefs.includeBots} onChange={(e) => setPrefs({ ...prefs, includeBots: e.target.checked })} />
                   Count bot comments
                 </label>
               </div>
 
               {filtered && (
-                <p className="filter-note">
+                <p className="flex items-center gap-2 text-sm text-muted">
                   Filters are on.
-                  <button type="button" className="text-button" onClick={clearFilters}>
+                  <button type="button" className={TEXT_BUTTON} onClick={clearFilters}>
                     Clear filters
                   </button>
                 </p>
@@ -457,27 +448,27 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
             </div>
 
             {rows.length === 0 ? (
-              <div className="empty-state">
-                <strong>No open pull requests involve you.</strong>
+              <EmptyState title="No open pull requests involve you.">
                 <span>PRs you author, are assigned to, or are asked to review will show up here.</span>
-              </div>
+              </EmptyState>
             ) : visible.length === 0 ? (
-              <div className="empty-state">
-                <strong>Nothing matches these filters.</strong>
-                <button type="button" className="button" onClick={clearFilters}>
+              <EmptyState title="Nothing matches these filters.">
+                <button type="button" className={button()} onClick={clearFilters}>
                   Clear filters
                 </button>
-              </div>
+              </EmptyState>
             ) : (
               <>
-                <section className="section section-needs" aria-labelledby="needs-title">
-                  <div className="section-head">
-                    <h2 id="needs-title">Needs you</h2>
-                    <span className={`section-count${needsYou.length ? " section-count-accent" : ""}`}>{needsYou.length}</span>
+                <section className="flex flex-col gap-3" aria-labelledby="needs-title">
+                  <div className="flex items-center gap-2">
+                    <h2 id="needs-title" className="text-md font-semibold">
+                      Needs you
+                    </h2>
+                    <CountPill count={needsYou.length} accent={needsYou.length > 0} />
                     {needsYou.some((r) => r.fresh.length) && (
                       <button
                         type="button"
-                        className="button button-sm"
+                        className={cn(button({ size: "sm" }), "ml-auto")}
                         onClick={() => markSeen(needsYou.filter((r) => r.fresh.length).map((r) => r.pr.id))}
                       >
                         Mark all read
@@ -485,7 +476,7 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
                     )}
                   </div>
                   {needsYou.length ? (
-                    <ul className="task-list">
+                    <ul className="flex flex-col gap-3">
                       {needsYou.map((r) => (
                         <TaskCard
                           key={r.pr.id}
@@ -501,32 +492,36 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
                       ))}
                     </ul>
                   ) : (
-                    <div className="caught-up">
-                      <CheckCircle size={28} weight="fill" aria-hidden />
+                    <div className="flex items-center gap-3 rounded-xl border border-green/30 bg-green-bg px-5 py-4">
+                      <CheckCircle className="shrink-0 text-green" size={28} weight="fill" aria-hidden />
                       <div>
-                        <strong>You&apos;re all caught up</strong>
-                        <span>No merge conflicts, review requests or new comments{repo ? ` in ${repo}` : ""}.</span>
+                        <strong className="block text-md">You&apos;re all caught up</strong>
+                        <span className="text-sm text-muted">No merge conflicts, review requests or new comments{repo ? ` in ${repo}` : ""}.</span>
                       </div>
                     </div>
                   )}
                 </section>
 
                 {restCount > 0 && (
-                  <section className="section" aria-labelledby="rest-title">
-                    <div className="section-head">
-                      <h2 id="rest-title">Everything else</h2>
-                      <span className="section-count">{restCount}</span>
+                  <section className="flex flex-col gap-3" aria-labelledby="rest-title">
+                    <div className="flex items-center gap-2">
+                      <h2 id="rest-title" className="text-md font-semibold">
+                        Everything else
+                      </h2>
+                      <CountPill count={restCount} />
                     </div>
-                    <div className="rest-groups">
+                    <div className="flex flex-col gap-5">
                       {restGroups.map((g) => (
-                        <div key={g.repo} className="row-group">
+                        <div key={g.repo} className="flex flex-col gap-2">
                           {!repo && (
-                            <h3 className="row-group-title">
-                              <a href={`#/${g.repo}`}>{g.repo}</a>
-                              <span>{g.items.length}</span>
+                            <h3 className="flex items-center gap-2 text-sm font-semibold">
+                              <a className="text-fg hover:underline" href={`#/${g.repo}`}>
+                                {g.repo}
+                              </a>
+                              <span className="font-mono text-xs font-normal text-muted">{g.items.length}</span>
                             </h3>
                           )}
-                          <ul className="row-list card">
+                          <ul className="overflow-hidden rounded-xl border border-line bg-surface shadow-1">
                             {g.items.map((r) => (
                               <PrRow
                                 key={r.pr.id}
@@ -548,7 +543,7 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
               </>
             )}
 
-            <p className="footnote">Refreshes every {REFRESH_MS / 60_000} minutes and whenever you return to this tab.</p>
+            <p className="mt-2 text-center text-xs text-muted">Refreshes every {REFRESH_MS / 60_000} minutes and whenever you return to this tab.</p>
           </>
         )}
       </main>
@@ -558,14 +553,23 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
 
 function NavItem({ href, label, title, total, needs, current }: { href: string; label: string; title?: string; total: number; needs: number; current: boolean }) {
   return (
-    <a href={href} className={`nav-item${total ? "" : " dim"}`} aria-current={current ? "page" : undefined} title={title}>
-      <span className="nav-label">{label}</span>
+    <a
+      href={href}
+      aria-current={current ? "page" : undefined}
+      title={title}
+      className={cn(
+        "flex min-h-[34px] items-center gap-2 rounded-lg pr-2 pl-3 text-sm font-medium transition-colors hover:bg-surface-2 pointer-coarse:min-h-11",
+        total ? "text-fg" : "text-muted",
+        current && "bg-surface-2 font-semibold shadow-[inset_3px_0_0_var(--accent)]",
+      )}
+    >
+      <span className="min-w-0 flex-1 truncate">{label}</span>
       {needs > 0 && (
-        <span className="nav-needs" aria-hidden>
+        <span className="min-w-5 rounded-full bg-accent px-1.5 text-center font-mono text-xs leading-5 font-semibold text-bg" aria-hidden>
           {needs}
         </span>
       )}
-      <span className="nav-total" aria-hidden>
+      <span className="min-w-[18px] text-right font-mono text-xs text-muted" aria-hidden>
         {total}
       </span>
       <span className="sr-only">
@@ -575,12 +579,21 @@ function NavItem({ href, label, title, total, needs, current }: { href: string; 
   );
 }
 
+function EmptyState({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-line-strong px-4 py-12 text-center text-muted">
+      <strong className="text-md text-fg">{title}</strong>
+      {children}
+    </div>
+  );
+}
+
 function Skeleton() {
   return (
-    <div className="skeleton" aria-hidden>
-      <div className="skeleton-bar" />
-      <div className="skeleton-block" />
-      <div className="skeleton-block" />
+    <div className="flex flex-col gap-4" aria-hidden>
+      <div className="h-8 max-w-[640px] animate-pulse rounded-xl bg-surface-2" />
+      <div className="h-[120px] animate-pulse rounded-xl bg-surface-2" />
+      <div className="h-[120px] animate-pulse rounded-xl bg-surface-2" />
     </div>
   );
 }

@@ -2,22 +2,45 @@
 
 import { useEffect, useRef, type SelectHTMLAttributes } from "react";
 import { CaretDown, MagnifyingGlass, X, type Icon } from "@phosphor-icons/react";
+import { cn } from "@/lib/ui";
 
-type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { icon?: Icon; wrapClassName?: string };
+const FIELD =
+  "min-h-9 rounded-lg border border-line-strong bg-surface text-sm text-fg shadow-1 transition hover:border-muted focus:border-accent focus:outline-hidden focus:ring-3 focus:ring-accent/20";
+
+type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & { icon?: Icon; block?: boolean };
 
 /**
  * A native <select> (so keyboard, screen readers and mobile pickers keep working)
- * dressed to match the app. Browsers that support customizable selects also get a
- * themed option list; see `.select` in globals.css.
+ * dressed to match the app. The `select` class hooks up the themed option list in globals.css.
  */
-export function Select({ icon: Glyph, wrapClassName, children, ...props }: SelectProps) {
+export function Select({ icon: Glyph, block, className, children, ...props }: SelectProps) {
   return (
-    <span className={`select-wrap${Glyph ? " has-icon" : ""}${wrapClassName ? ` ${wrapClassName}` : ""}`}>
-      {Glyph && <Glyph className="select-icon" size={16} weight="bold" aria-hidden />}
-      <select className="select" {...props}>
+    <span className={cn("group relative min-w-0 items-center", block ? "flex w-full" : "inline-flex")}>
+      {Glyph && (
+        <Glyph
+          className="pointer-events-none absolute left-3 z-10 text-muted transition-colors group-focus-within:text-fg"
+          size={16}
+          weight="bold"
+          aria-hidden
+        />
+      )}
+      <select
+        className={cn(
+          "select w-full min-w-[200px] truncate pr-9 font-medium max-md:min-h-11 max-md:text-md pointer-coarse:min-h-11",
+          FIELD,
+          Glyph ? "pl-9" : "pl-3",
+          className,
+        )}
+        {...props}
+      >
         {children}
       </select>
-      <CaretDown className="select-caret" size={14} weight="bold" aria-hidden />
+      <CaretDown
+        className="pointer-events-none absolute right-3 z-10 text-muted transition-colors group-hover:text-fg group-focus-within:text-fg"
+        size={14}
+        weight="bold"
+        aria-hidden
+      />
     </span>
   );
 }
@@ -40,8 +63,13 @@ export function SearchField({ id, label, value, onChange, placeholder }: { id: s
   }, []);
 
   return (
-    <div className="search">
-      <MagnifyingGlass className="search-icon" size={16} weight="bold" aria-hidden />
+    <div className="group relative flex items-center max-md:flex-[1_1_100%]">
+      <MagnifyingGlass
+        className="pointer-events-none absolute left-3 z-10 text-muted transition-colors group-focus-within:text-fg"
+        size={16}
+        weight="bold"
+        aria-hidden
+      />
       <label htmlFor={id} className="sr-only">
         {label}
       </label>
@@ -53,6 +81,10 @@ export function SearchField({ id, label, value, onChange, placeholder }: { id: s
         placeholder={placeholder}
         autoComplete="off"
         spellCheck={false}
+        className={cn(
+          FIELD,
+          "w-[280px] px-9 placeholder:text-muted max-md:min-h-11 max-md:w-full max-md:text-md [&::-webkit-search-cancel-button]:appearance-none",
+        )}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Escape" && value) {
@@ -64,7 +96,7 @@ export function SearchField({ id, label, value, onChange, placeholder }: { id: s
       {value ? (
         <button
           type="button"
-          className="search-clear"
+          className="absolute right-[5px] grid size-[26px] place-items-center rounded-md text-muted transition hover:bg-surface-2 hover:text-fg pointer-coarse:right-0 pointer-coarse:size-11"
           aria-label="Clear search"
           onClick={() => {
             onChange("");
@@ -74,7 +106,10 @@ export function SearchField({ id, label, value, onChange, placeholder }: { id: s
           <X size={14} weight="bold" aria-hidden />
         </button>
       ) : (
-        <kbd className="search-hint" aria-hidden>
+        <kbd
+          className="pointer-events-none absolute right-2 grid h-5 min-w-5 place-items-center rounded-[5px] border border-line-strong bg-surface-2 px-[5px] font-mono text-xs leading-none text-muted transition-opacity group-focus-within:opacity-0 pointer-coarse:hidden"
+          aria-hidden
+        >
           /
         </kbd>
       )}

@@ -33,7 +33,7 @@ const ICONS: Record<SignalKey, Icon> = {
 };
 
 /** Decorative: always rendered next to a visible text label. */
-export function SignalIcon({ signal, size = 14 }: { signal: SignalKey; size?: number }) {
+export function SignalIcon({ signal, size = 14, className }: { signal: SignalKey; size?: number; className?: string }) {
   const Glyph = ICONS[signal];
-  return <Glyph size={size} weight="bold" aria-hidden />;
+  return <Glyph className={className} size={size} weight="bold" aria-hidden />;
 }

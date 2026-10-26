@@ -66,7 +66,7 @@ So replying on GitHub clears it automatically. Bot comments (CI, Linear, AI revi
 - `lib/signals.ts`: turns raw PR data into the "Needs you" tasks and the status badges.
 - `components/`: the UI. The dashboard refreshes every 2 minutes and whenever you return to the tab. GitHub computes merge conflicts lazily, so a PR may briefly show *Checking for conflicts…* and then update on its own.
 
-Built with Next.js, React and TypeScript.
+Built with Next.js, React, TypeScript and Tailwind CSS.
 
 ## Deploying it for everyone
 
