@@ -278,45 +278,197 @@ code {
 .text-button:hover {
   text-decoration: underline;
 }
-.select {
-  min-height: var(--control-h);
-  padding: 0 var(--space-2);
+/* Dropdowns and the search box share one look. */
+.select-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.select-block {
+  display: flex;
+  width: 100%;
+}
+.select,
+.search input {
+  min-height: 36px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--surface);
   color: var(--text);
   font: inherit;
   font-size: var(--text-sm);
+  box-shadow: var(--shadow-sm);
+  transition:
+    border-color var(--duration) var(--ease),
+    box-shadow var(--duration) var(--ease);
+}
+.select:hover,
+.search input:hover {
+  border-color: var(--muted);
+}
+.select:focus,
+.search input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 100%;
+  min-width: 200px;
+  padding: 0 36px 0 var(--space-3);
+  font-weight: 500;
+  text-overflow: ellipsis;
   cursor: pointer;
 }
+.has-icon .select {
+  padding-left: 36px;
+}
+.select-icon,
+.select-caret,
+.search-icon {
+  position: absolute;
+  z-index: 1;
+  color: var(--muted);
+  pointer-events: none;
+  transition: color var(--duration) var(--ease);
+}
+.select-icon,
+.search-icon {
+  left: 12px;
+}
+.select-caret {
+  right: 12px;
+}
+.select-wrap:hover .select-caret,
+.select-wrap:focus-within .select-caret,
+.select-wrap:focus-within .select-icon,
+.search:focus-within .search-icon {
+  color: var(--text);
+}
+/* Native option lists follow the theme where the browser allows it. */
+.select option,
+.select optgroup {
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Browsers with customizable <select> (Chrome/Edge 135+) also get a themed option list.
+   Everyone else keeps the native menu, which still follows light/dark via color-scheme. */
+@supports (appearance: base-select) {
+  .select,
+  .select::picker(select) {
+    appearance: base-select;
+  }
+  .select {
+    display: flex;
+    align-items: center;
+  }
+  .select::picker-icon {
+    display: none;
+  }
+  .select::picker(select) {
+    min-width: anchor-size(width);
+    margin-block: 6px;
+    padding: var(--space-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow-md);
+  }
+  .select optgroup {
+    padding-top: var(--space-2);
+    color: var(--muted);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .select option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 34px;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    letter-spacing: normal;
+    text-transform: none;
+    cursor: pointer;
+  }
+  .select option:hover,
+  .select option:focus-visible {
+    outline: none;
+    background: var(--surface-2);
+  }
+  .select option:checked {
+    font-weight: 600;
+  }
+  .select option::checkmark {
+    color: var(--accent);
+  }
+}
+
 .search {
   position: relative;
   display: flex;
   align-items: center;
 }
-.search > svg {
-  position: absolute;
-  left: 10px;
-  color: var(--muted);
-  pointer-events: none;
-}
 .search input {
-  width: 260px;
-  min-height: var(--control-h);
-  padding: 0 var(--space-3) 0 34px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: var(--text-sm);
-  transition: border-color var(--duration) var(--ease);
+  width: 280px;
+  padding: 0 36px;
 }
 .search input::placeholder {
   color: var(--muted);
 }
-.search input:hover {
-  border-color: var(--muted);
+.search input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-clear {
+  position: absolute;
+  right: 5px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--muted);
+  transition:
+    background-color var(--duration) var(--ease),
+    color var(--duration) var(--ease);
+}
+.search-clear:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.search-hint {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs);
+  line-height: 1;
+  pointer-events: none;
+  transition: opacity var(--duration) var(--ease);
+}
+.search:focus-within .search-hint {
+  opacity: 0;
 }
 .check,
 .field-inline {
@@ -1283,6 +1435,14 @@ a.row-title:hover {
   }
   .button-icon {
     min-width: 44px;
+  }
+  .search-clear {
+    right: 0;
+    width: 44px;
+    height: 44px;
+  }
+  .search-hint {
+    display: none;
   }
   .check input {
     width: 20px;

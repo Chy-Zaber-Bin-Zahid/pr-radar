@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowClockwise, CheckCircle, MagnifyingGlass, SignOut, Warning, XCircle } from "@phosphor-icons/react";
+import { ArrowClockwise, CheckCircle, FolderSimple, Funnel, SignOut, Warning, XCircle } from "@phosphor-icons/react";
 import type { Activity, DashboardData, PullRequest, Role } from "@/lib/types";
 import { TASK_ORDER, signalsFor, tasksFor, unseenActivity, type Signal, type SignalKey, type Task, type Tone } from "@/lib/signals";
 import { timeAgo } from "@/lib/time";
 import { useStoredState } from "@/lib/useStoredState";
+import { SearchField, Select } from "./Fields";
 import { Logo } from "./Logo";
 import { PrRow } from "./PrRow";
 import { SignalIcon } from "./SignalIcon";
@@ -290,7 +291,7 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
         {ready && (
           <label className="mobile-project">
             <span className="sr-only">Project</span>
-            <select className="select" value={repo ?? ""} onChange={(e) => (location.hash = `/${e.target.value}`)}>
+            <Select icon={FolderSimple} wrapClassName="select-block" value={repo ?? ""} onChange={(e) => (location.hash = `/${e.target.value}`)}>
               <option value="">All projects ({scoped.length})</option>
               {projects.map((org) => (
                 <optgroup key={org.owner} label={org.owner}>
@@ -302,7 +303,7 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
                   ))}
                 </optgroup>
               ))}
-            </select>
+            </Select>
           </label>
         )}
 
@@ -410,28 +411,22 @@ export function Dashboard({ viewer }: { viewer: Viewer }) {
               </div>
 
               <div className="view-options">
-                <div className="search">
-                  <MagnifyingGlass size={16} weight="bold" aria-hidden />
-                  <label htmlFor="pr-search" className="sr-only">
-                    Search pull requests
-                  </label>
-                  <input
-                    id="pr-search"
-                    type="search"
-                    placeholder="Search title, branch, author…"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                  />
-                </div>
+                <SearchField
+                  id="pr-search"
+                  label="Search pull requests"
+                  placeholder="Search title, branch, author…"
+                  value={query}
+                  onChange={setQuery}
+                />
                 <label className="field-inline">
                   Show
-                  <select className="select" value={role} onChange={(e) => setRole(e.target.value as RoleFilter)}>
+                  <Select icon={Funnel} value={role} onChange={(e) => setRole(e.target.value as RoleFilter)}>
                     {ROLE_FILTERS.map((t) => (
                       <option key={t.key} value={t.key}>
                         {t.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <label className="check">
                   <input
